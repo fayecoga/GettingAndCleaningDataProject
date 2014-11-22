@@ -79,9 +79,9 @@ summaryDf [,2] <- factor(sapply(summaryDf[,2],
 # Save the data frame with meaningful name and date as part of the name.
 fileName <- paste('./summaryOfActivityClassifierFeatures_',
                   format(Sys.time(), "%m_%d_%Y_%H_%M_%S_%Z"),
-                  '.csv',
+                  '.txt',
                   sep='' )
 # Save the summary report.
-write.csv(summaryDf, fileName)
+write.table(summaryDf, fileName, row.name=FALSE)
 /setwd(savedWorkingDirectory)
 
