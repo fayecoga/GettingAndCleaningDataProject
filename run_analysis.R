@@ -17,19 +17,18 @@ XtrainDf <- read.table('./UCI HAR Dataset/train/X_train.txt')
 XtestDf <- read.table('./UCI HAR Dataset/test/X_test.txt')
 YtrainDf <- read.table('./UCI HAR Dataset/train/Y_train.txt')
 YtestDf <- read.table('./UCI HAR Dataset/test/Y_test.txt')
-subjectTrainDf <- read.table('./UCI HAR Dataset/train/subject_train.txt')
-subjectTestDf <- read.table('./UCI HAR Dataset/test/subject_test.txt')
+subjectTrainDf <- read.table('./UCI HAR Dataset/train/subject_train.txt',
+                             stringsAsFactors=FALSE)
+subjectTestDf <- read.table('./UCI HAR Dataset/test/subject_test.txt',
+                            stringsAsFactors=FALSE)
 featuresDf <- read.table('./UCI HAR Dataset/features.txt',
                          stringsAsFactors=FALSE)
 activitiesLabelsDf <- read.table('./UCI HAR Dataset/activity_labels.txt')
 
+########### Begin the exercise of creating a tidy dataset summary ############
+
 # Combine all training and test set observations to one data frame.
 AllObservationsDf <- rbind(XtrainDf, XtestDf)
-
-# Free up memory in case others who run this script
-# do not have significant memory in their machine
-rm(XtrainDf, XtestDf)
-
 # Using the featuresDf that was loaded, select only the variables
 # of interest, per the requirements of the project
 variableIndexesOfInterest <- grep('mean|std', featuresDf[,2])
@@ -39,43 +38,37 @@ ObservationsOfInterestDf <- select(AllObservationsDf,variableIndexesOfInterest)
 colnames(ObservationsOfInterestDf) <- featuresDf[variableIndexesOfInterest,2]
 variableNamesOfInterest <- strsplit(colnames(ObservationsOfInterestDf), '')
 
-# Combine the training and test set observations into a single vector, but
-# add a constant to each of the test set subjects, so that we can later
+# Free up memory in case others who run this script
+# do not have significant memory in their machine
+rm(XtrainDf, XtestDf, AllObservationsDf)
+
+# Create offset constant for test set subjects, so that we can later
 # easily differentiate the two when we give the entries meaningful names.
 testSetIndexOffset <- max(subjectTrainDf$V1)
-subjects <- c(subjectTrainDf$V1, subjectTestDf$V1 + testSetIndexOffset)
 
-# Now add the vector as a new column to the primary data set and name it.
-ObservationsOfInterestDf <- cbind(ObservationsOfInterestDf, subjects)
-names(ObservationsOfInterestDf)[dim(ObservationsOfInterestDf)[2]] <- 'subject'
+# Use the functions from the dplyr package to create the summaryTable
+# with appropriate columns and group the data into a grouped
+# object. once grouped summarize variables by activity and subject.
+# Finally, replace the numeric subject column with meaningful values.
+summaryTable <-as.data.frame(
+    mutate(ObservationsOfInterestDf,
+       activity = factor(
+           c(YtrainDf[,1], YtestDf[,1]), labels=activitiesLabelsDf$V2),
+       subject = c(subjectTrainDf$V1, subjectTestDf$V1 + testSetIndexOffset)
+           ) %>%
+    group_by(activity, subject) %>%
+    summarise_each(
+        funs(mean),
+        1:length(variableIndexesOfInterest)) %>%
+    mutate(subject = factor(sapply(subject,
+        function(x) {
+            if (x > testSetIndexOffset)
+                paste('Test Id ',  toString(x - testSetIndexOffset))
+            else
+                paste('Train Id',  toString(x))
+        })))
+    )
 
-# The activity variables are combined into one vector and converted to a
-# factor vector, prior to grouping according to activity and subject.
-activity <- factor(c(YtrainDf[,1], YtestDf[,1]), labels=activitiesLabelsDf$V2)
-ObservationsOfInterestDf <- cbind(ObservationsOfInterestDf, activity)
-
-# Use the functions from the dplyr package to group the data into a grouped
-# object. The grouped by object wraps the dataframe and maintains indexes
-# into the data based on the grouping variables, activity and subject.
-byActivityThenSubjectDf <- group_by(ObservationsOfInterestDf, activity, subject)
-summaryTable <- summarise_each(
-    byActivityThenSubjectDf,
-    funs(mean),
-    1:length(variableIndexesOfInterest))
-
-# Now we can coerce the summaryTable to a normal data frame and from
-# there we can give the values of the subject variable meaningful names.
-# per the requirements of the project.
-summaryDf <- as.data.frame(summaryTable)
-summaryDf [,2] <- factor(sapply(summaryDf[,2],
-                         function(x) {
-                             if (x > testSetIndexOffset)
-                                 paste('Test Id ',  toString(x - testSetIndexOffset))
-                             else
-                                 paste('Train Id',  toString(x))
-                             }
-                        )
-                    )
 # Save the data frame with meaningful name and date as part of the name.
 fileName <- paste('./summaryOfActivityClassifierFeatures_',
                   format(Sys.time(), "%m_%d_%Y_%H_%M_%S_%Z"),
@@ -83,5 +76,5 @@ fileName <- paste('./summaryOfActivityClassifierFeatures_',
                   sep='' )
 # Save the summary report.
 write.table(summaryDf, fileName, row.name=FALSE)
-/setwd(savedWorkingDirectory)
+setwd(savedWorkingDirectory)
 
