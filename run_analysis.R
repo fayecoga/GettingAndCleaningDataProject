@@ -3,7 +3,7 @@
 # It is an implimentation of the requirements for the Getting And Cleaning Data
 # course presented by John Hopkins / Coursera
 
-# To run this script the data is assumed to be in a folder named UCI HAR Dataset
+# To run this script the data is assumed to be in a folder named "UCI HAR Dataset"
 # under the working directory where this script is assumed to be saved to.
 
 #The following license applies to the origional data set which can be found at:
@@ -53,7 +53,7 @@ colnames(featuresOfInterestDf) <- featuresDf[featureIndexesOfInterest,2]
 rm(XtrainDf, XtestDf, AllFeaturesDf)
 
 # Create offset constant for test set subjects, so that we can later
-# easily differentiate the two when we give the entries meaningful names.
+# easily differentiate which group a subject comes from.
 testSetIndexOffset <- max(subjectTrainDf$V1)
 
 # Use the functions from the dplyr package to create the summaryTable
@@ -65,23 +65,24 @@ summaryDf <- as.data.frame(
     mutate(featuresOfInterestDf,
        activity = factor(
            c(YtrainDf[,1], YtestDf[,1]), labels=activitiesLabelsDf$V2),
-       subject = c(subjectTrainDf$V1, subjectTestDf$V1 + testSetIndexOffset)
+       subject_id = c(subjectTrainDf$V1, subjectTestDf$V1 + testSetIndexOffset)
            ) %>%
     # Summarize the data on activity and subject as stated by requirements.
-    group_by(activity, subject) %>%
+    group_by(activity, subject_id) %>%
     summarise_each(
         funs(mean),
         1:length(featureIndexesOfInterest)) %>%
     #Give the training and test subjects meaningful names.
-    mutate(subject = factor(sapply(subject,
+    mutate(subject_group = factor(sapply(subject_id,
         function(x) {
             if (x > testSetIndexOffset)
-                paste('Test Id ',  toString(x - testSetIndexOffset))
+                paste('Test')
             else
-                paste('Train Id',  toString(x))
+                paste('Train')
         })))  %>%
     # Narrow the data frame according to the principles of tidy data.
-    gather(feature, n, 1:ncol(featuresOfInterestDf) + 2 )
+    gather(feature, n, 1:ncol(featuresOfInterestDf) + 2 ) %>%
+    rename(feature_mean = n)
     )
 
 # Save the data frame with meaningful name and date as part of the name.
