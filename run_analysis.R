@@ -1,3 +1,13 @@
+# This script creates a tidy data set which is a summary of the features used to
+# create a classifier that can predict a subject's activity from the feature data.
+# It is an implimentation of the requirements for the Getting And Cleaning Data
+# course presented by John Hopkins / Coursera
+
+# To run this script the data is assumed to be in a folder named UCI HAR Dataset
+# under the working directory where this script is assumed to be saved to.
+
+#The following license applies to the origional data set which can be found at:
+#http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones
 # License:
 # ========
 # Use of this dataset in publications must be acknowledged by referencing the following publication [1]
@@ -9,8 +19,7 @@
 # Jorge L. Reyes-Ortiz, Alessandro Ghio, Luca Oneto, Davide Anguita. November 2012.
 
 library(dplyr)
-savedWorkingDirectory <- getwd()
-setwd('~/GettingDataProject')
+library(tidyr)
 
 # Read all of the relavent files of the dataset.
 XtrainDf <- read.table('./UCI HAR Dataset/train/X_train.txt')
@@ -28,19 +37,20 @@ activitiesLabelsDf <- read.table('./UCI HAR Dataset/activity_labels.txt')
 ########### Begin the exercise of creating a tidy dataset summary ############
 
 # Combine all training and test set observations to one data frame.
-AllObservationsDf <- rbind(XtrainDf, XtestDf)
+AllFeaturesDf <- rbind(XtrainDf, XtestDf)
 # Using the featuresDf that was loaded, select only the variables
 # of interest, per the requirements of the project
-variableIndexesOfInterest <- grep('mean|std', featuresDf[,2])
-ObservationsOfInterestDf <- select(AllObservationsDf,variableIndexesOfInterest)
+featureIndexesOfInterest <- grep('mean|std', featuresDf[,2])
+featuresOfInterestDf <- select(AllFeaturesDf,featureIndexesOfInterest)
 
-# Name the columns with the appropriate variable names of the filtered variables
-colnames(ObservationsOfInterestDf) <- featuresDf[variableIndexesOfInterest,2]
-variableNamesOfInterest <- strsplit(colnames(ObservationsOfInterestDf), '')
+# Name the columns with the appropriate variable names of the filtered
+# variables. Do not change the names, because we need to be able to
+# trace back to the original data source.
+colnames(featuresOfInterestDf) <- featuresDf[featureIndexesOfInterest,2]
 
 # Free up memory in case others who run this script
 # do not have significant memory in their machine
-rm(XtrainDf, XtestDf, AllObservationsDf)
+rm(XtrainDf, XtestDf, AllFeaturesDf)
 
 # Create offset constant for test set subjects, so that we can later
 # easily differentiate the two when we give the entries meaningful names.
@@ -50,23 +60,28 @@ testSetIndexOffset <- max(subjectTrainDf$V1)
 # with appropriate columns and group the data into a grouped
 # object. once grouped summarize variables by activity and subject.
 # Finally, replace the numeric subject column with meaningful values.
-summaryTable <-as.data.frame(
-    mutate(ObservationsOfInterestDf,
+summaryDf <- as.data.frame(
+    # Add the activity and subject variables to the feature variables.
+    mutate(featuresOfInterestDf,
        activity = factor(
            c(YtrainDf[,1], YtestDf[,1]), labels=activitiesLabelsDf$V2),
        subject = c(subjectTrainDf$V1, subjectTestDf$V1 + testSetIndexOffset)
            ) %>%
+    # Summarize the data on activity and subject as stated by requirements.
     group_by(activity, subject) %>%
     summarise_each(
         funs(mean),
-        1:length(variableIndexesOfInterest)) %>%
+        1:length(featureIndexesOfInterest)) %>%
+    #Give the training and test subjects meaningful names.
     mutate(subject = factor(sapply(subject,
         function(x) {
             if (x > testSetIndexOffset)
                 paste('Test Id ',  toString(x - testSetIndexOffset))
             else
                 paste('Train Id',  toString(x))
-        })))
+        })))  %>%
+    # Narrow the data frame according to the principles of tidy data.
+    gather(feature, n, 1:ncol(featuresOfInterestDf) + 2 )
     )
 
 # Save the data frame with meaningful name and date as part of the name.
@@ -76,5 +91,5 @@ fileName <- paste('./summaryOfActivityClassifierFeatures_',
                   sep='' )
 # Save the summary report.
 write.table(summaryDf, fileName, row.name=FALSE)
-setwd(savedWorkingDirectory)
+
 
