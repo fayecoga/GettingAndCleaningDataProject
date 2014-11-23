@@ -76,9 +76,9 @@ summaryDf <- as.data.frame(
     mutate(subject_group = factor(sapply(subject_id,
         function(x) {
             if (x > testSetIndexOffset)
-                paste('Test')
+                'Test'
             else
-                paste('Train')
+                'Train'
         })))  %>%
     # Narrow the data frame according to the principles of tidy data.
     gather(feature, n, 1:ncol(featuresOfInterestDf) + 2 ) %>%
