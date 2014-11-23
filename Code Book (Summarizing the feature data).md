@@ -10,7 +10,11 @@ November 22, 2014
 
 The Raw Data
 ------------------
-The [data set][]  source used for this exercise comes from the [UCI][]
+The [data set][]  source used for this exercise comes from the [UCI][].  The abstract from the UCI website is as follow:
+
+>""Human Activity Recognition database built from the recordings of 30 subjects performing activities of daily living (ADL) while carrying a waist-mounted smartphone with embedded inertial sensors."
+
+It is implied that a statistical machine learning algorithm was developed from the training datat set and then used to predict the activity of the test set subjects activity.
 
 The Tidy Data
 ------------------
@@ -35,14 +39,17 @@ The tidy data produced by the R script in this repository is a data frame consis
 	
 	A subset of variables that are either a raw variable or a computed variable of the Samsung triaxial accelerometer, and or gyroscope. The subset of features are all of the feature variables from the raw data set that represent either a mean or  variance. The variable names of the subset are identical to that of the raw data, therefore one may go to the code book of the raw data to determine the meaning of a given feature variable.
 
-
 * feature_mean 
+
+	The mean value for the given feature vector in the subset of features specified by the project requirements. The project requirements state that our summary data must include only those features that  represent the mean or standard deviation of  an underlying sensor variable. 
+
 
 The Code Recipe
 ----------------------
-The code recipe is an R script located at the [student repo] staged on her github account.
-The tidy summary data set has the date of the script execution embedded into the file name. 
+The code recipe is an 'R' script located at the [student repo] staged on her github account.
+The tidy summary data set that is a product of this script has the date of the script execution embedded into the file name. 
 ###Software and Hardware###
+####Report from R studio version command####
 platform       x86_64-apple-darwin13.1.0   
 arch           x86_64                      
 os             darwin13.1.0                
@@ -56,7 +63,25 @@ day            10
 svn rev        66115                       
 language       R                           
 version.string R version 3.1.1 (2014-07-10)
-nickname       Sock it to Me   
+nickname       Sock it to Me 
+#### Machine Report (About This Mac / System Report / Hardware Overview ) ####
+
+Model Identifier:	iMac14,2
+
+Processor Name:	Intel Core i5
+
+Processor Speed:	3.2 GHz
+
+Number of Processors:	1
+
+Total Number of Cores:	4
+
+L2 Cache (per Core):	256 KB
+
+L3 Cache:	6 MB
+
+Memory:	24 GB
+
 
 [data set]:https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip  
 
