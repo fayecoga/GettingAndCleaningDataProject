@@ -44,12 +44,12 @@ activitiesLabelsDf <- read.table('./UCI HAR Dataset/activity_labels.txt')
 
 ########### Begin the exercise of creating a tidy dataset summary ############
 featureIndexesOfInterest <- grep('mean|std',featuresDf)
-featuresOfInterestDf <- select(AllFeaturesDf,featureIndexesOfInterest ))
+featuresOfInterestDf <- select(AllFeaturesDf,featureIndexesOfInterest )
 
 # Name the columns with the appropriate variable names of the filtered
 # variables. Do not change the names, because we need to be able to
 # trace back to the original data source.
-colnames(featuresOfInterestDf) <- featuresDf[featureIndexesOfInterest,2]
+colnames(featuresOfInterestDf) <- featuresDf[featureIndexesOfInterest]
 
 # Free up memory in case others who run this script
 # do not have significant memory in their machine
