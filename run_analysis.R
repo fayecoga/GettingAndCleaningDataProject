@@ -28,9 +28,9 @@ AllFeaturesDf <- rbind(read.table('./UCI HAR Dataset/train/X_train.txt'),
                        read.table('./UCI HAR Dataset/test/X_test.txt'))
 
 # the variables of interest, per the requirements of the project
-featuresDf <-  read.table(
+featureIndexesOfInterest <-  grep('mean|std', read.table(
     './UCI HAR Dataset/features.txt',
-    stringsAsFactors=FALSE)$V2
+    stringsAsFactors=FALSE)$V2)
 
 YtrainDf <- read.table('./UCI HAR Dataset/train/Y_train.txt')
 YtestDf <- read.table('./UCI HAR Dataset/test/Y_test.txt')
@@ -43,7 +43,7 @@ subjectTestDf <- read.table('./UCI HAR Dataset/test/subject_test.txt',
 activitiesLabelsDf <- read.table('./UCI HAR Dataset/activity_labels.txt')
 
 ########### Begin the exercise of creating a tidy dataset summary ############
-featureIndexesOfInterest <- grep('mean|std',featuresDf)
+
 featuresOfInterestDf <- select(AllFeaturesDf,featureIndexesOfInterest )
 
 # Name the columns with the appropriate variable names of the filtered
