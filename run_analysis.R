@@ -24,13 +24,17 @@ library(tidyr)
 # Read all of the relavent files of the dataset.
 
 # Combine all training and test set observations to one data frame.
-xTrainDf <- read.table('./UCI HAR Dataset/train/X_train.txt')
-xTestDf <-  read.table('./UCI HAR Dataset/test/X_test.txt')
-featuresDf <- read.table(
+AllFeaturesDf <- rbind(read.table('./UCI HAR Dataset/train/X_train.txt'),
+                       read.table('./UCI HAR Dataset/test/X_test.txt'))
+
+# the variables of interest, per the requirements of the project
+featureIndexesOfInterest <-  grep('mean|std', read.table(
     './UCI HAR Dataset/features.txt',
-    stringsAsFactors=FALSE)
+    stringsAsFactors=FALSE)$V2)
+
 YtrainDf <- read.table('./UCI HAR Dataset/train/Y_train.txt')
 YtestDf <- read.table('./UCI HAR Dataset/test/Y_test.txt')
+
 subjectTrainDf <- read.table('./UCI HAR Dataset/train/subject_train.txt',
                              stringsAsFactors=FALSE)
 subjectTestDf <- read.table('./UCI HAR Dataset/test/subject_test.txt',
@@ -40,22 +44,20 @@ activitiesLabelsDf <- read.table('./UCI HAR Dataset/activity_labels.txt')
 
 ########### Begin the exercise of creating a tidy dataset summary ############
 
-xTrainDf <- mutate(xTrainDf, subject_group = 'Train')
-xTestDf <- mutate(xTestDf, subject_group = 'Test')
-
-AllFeaturesDf <- rbind_list(xTrainDf, xTestDf)
-# the variables of interest, per the requirements of the project
-featureIndexesOfInterest <-  grep('mean|std',featuresDf$V2)
 featuresOfInterestDf <- select(AllFeaturesDf,featureIndexesOfInterest )
 
 # Name the columns with the appropriate variable names of the filtered
 # variables. Do not change the names, because we need to be able to
 # trace back to the original data source.
-colnames(featuresOfInterestDf)[1:length(featureIndexesOfInterest)] <- featuresDf$V2[featureIndexesOfInterest]
+colnames(featuresOfInterestDf) <- featuresDf[featureIndexesOfInterest]
 
 # Free up memory in case others who run this script
 # do not have significant memory in their machine
 rm(AllFeaturesDf)
+
+# Create offset constant for test set subjects, so that we can later
+# easily differentiate which group a subject comes from.
+testSetIndexOffset <- max(subjectTrainDf$V1)
 
 # Use the functions from the dplyr package to create the summaryTable
 # with appropriate columns and group the data into a grouped
@@ -65,13 +67,21 @@ summaryDf <- as.data.frame(
     mutate(featuresOfInterestDf,
            activity = factor(
                c(YtrainDf[,1], YtestDf[,1]), labels=activitiesLabelsDf$V2),
-           subject_id = c(subjectTrainDf$V1, subjectTestDf$V1)
+           subject_id = c(subjectTrainDf$V1, subjectTestDf$V1 + testSetIndexOffset)
     ) %>%
         # Summarize the data on activity and subject as stated by requirements.
         group_by(activity, subject_id) %>%
         summarise_each(
             funs(mean),
             1:length(featureIndexesOfInterest)) %>%
+        #Give the training and test subjects meaningful names.
+        mutate(subject_group = factor(sapply(subject_id,
+                                             function(x) {
+                                                 if (x > testSetIndexOffset)
+                                                     'Test'
+                                                 else
+                                                     'Train'
+                                             })))  %>%
         # Narrow the data frame according to the principles of tidy data.
         gather(feature, n, 1:ncol(featuresOfInterestDf) + 2 ) %>%
         rename(feature_mean = n)
