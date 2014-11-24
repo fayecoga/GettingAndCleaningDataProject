@@ -1,4 +1,3 @@
-
 # This script creates a tidy data set which is a summary of the features used to
 # create a classifier that can predict a subject's activity from the feature data.
 # It is an implimentation of the requirements for the Getting And Cleaning Data
@@ -9,6 +8,7 @@
 
 #The following license applies to the origional data set which can be found at:
 #http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones
+
 # License:
 # ========
 # Use of this dataset in publications must be acknowledged by referencing the following publication [1]
@@ -56,10 +56,6 @@ colnames(featuresOfInterestDf) <- featuresDf[featureIndexesOfInterest]
 # do not have significant memory in their machine
 rm(AllFeaturesDf)
 
-# Create offset constant for test set subjects, so that we can later
-# easily differentiate which group a subject comes from.
-testSetIndexOffset <- max(subjectTrainDf$V1)
-
 # Use the functions from the dplyr package to create the summaryTable
 # with appropriate columns and group the data into a grouped
 # object. once grouped summarize variables by activity and subject.
@@ -68,7 +64,7 @@ summaryDf <- as.data.frame(
     mutate(featuresOfInterestDf,
            activity = factor(
                c(YtrainDf[,1], YtestDf[,1]), labels=activitiesLabelsDf$V2),
-           subject_id = c(subjectTrainDf$V1, subjectTestDf$V1 + testSetIndexOffset)
+           subject_id = c(subjectTrainDf$V1, subjectTestDf$V1)
     ) %>%
         # Summarize the data on activity and subject as stated by requirements.
         group_by(activity, subject_id) %>%
@@ -78,7 +74,7 @@ summaryDf <- as.data.frame(
         #Give the training and test subjects meaningful names.
         mutate(subject_group = factor(sapply(subject_id,
                                              function(x) {
-                                                 if (x > testSetIndexOffset)
+                                                 if (x %in% subjectTestDf$V1)
                                                      'Test'
                                                  else
                                                      'Train'
@@ -95,4 +91,3 @@ fileName <- paste('./summaryOfActivityClassifierFeatures_',
                   sep='' )
 # Save the summary report.
 write.table(summaryDf, fileName, row.name=FALSE)
-
