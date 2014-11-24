@@ -83,5 +83,5 @@ fileName <- paste('./summaryOfActivityClassifierFeatures_',
                   sep='' )
 # Save the summary report.
 write.csv(summaryDf, fileName)
-/setwd(savedWorkingDirectory)
+setwd(savedWorkingDirectory)
 
